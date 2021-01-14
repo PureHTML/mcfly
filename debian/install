@@ -3,4 +3,4 @@ mcfly.bash	    usr/share/mcfly
 mcfly.fish	    usr/share/mcfly
 mcfly.zsh	    usr/share/mcfly
 debian/mcfly.sh     etc/profile.d
-io.github.cantino.mcfly.metainfo.xml /usr/share/metainfo
+debian/io.github.cantino.mcfly.metainfo.xml /usr/share/metainfo
