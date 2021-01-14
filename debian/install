@@ -1,0 +1,4 @@
+target/release/mcfly usr/bin
+mcfly.bash	     usr/share/mcfly/mcfly.bash
+mcfly.fish	     usr/share/mcfly/mcfly.fish
+mcfly.zsh	    usr/share/mcfly/mcfly.zsh
