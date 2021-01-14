@@ -5,3 +5,11 @@ update.sh
 .zsh_history
 .zshrc
 /.fish
+
+/debian/.debhelper/
+/debian/debhelper-build-stamp
+/debian/files
+/debian/mcfly.debhelper.log
+/debian/mcfly.substvars
+/debian/mcfly/
+
