@@ -37,6 +37,23 @@ When suggesting a command, McFly takes into consideration:
 
 ## Installation
 
+### Install with APT
+
+1. Add Repository
+
+```bash 
+sudo apt install lsb-release wget
+echo "deb http://repo.vitexsoftware.cz $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/vitexsoftware.list
+sudo wget -O /etc/apt/trusted.gpg.d/vitexsoftware.gpg http://repo.vitexsoftware.cz/keyring.gpg
+sudo apt update
+```
+
+2. Install package
+
+```
+sudo apt install mcfly 
+```
+
 ### Install with Homebrew (on OS X or Linux)
 
 1. Install the tap:
