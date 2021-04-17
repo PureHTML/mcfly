@@ -1,6 +1,11 @@
-mcfly (0.5.2-1) UNRELEASED; urgency=low
+mcfly (0.5.3) UNRELEASED; urgency=low
+
+  * v0.5.2 update
+
+ -- CyberVitexus <info@vitexsoftware.cz>  Thu, 14 Jan 2021 01:57:28 +0100
+
+mcfly (0.5.2) UNRELEASED; urgency=low
 
   * Initial release. Closes: #nnnn
-    <nnnn is the bug number of your ITP>
 
- -- CyberVitexus <>  Thu, 14 Jan 2021 01:57:28 +0100
+ -- CyberVitexus <info@vitexsoftware.cz>  Thu, 14 Jan 2021 01:57:28 +0100
