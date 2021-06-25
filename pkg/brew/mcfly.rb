@@ -7,7 +7,7 @@
 #   brew untap cantino/mcfly
 
 class Mcfly < Formula
-  version 'v0.5.6'
+  version 'v0.5.7'
   desc "McFly"
   homepage "https://github.com/cantino/mcfly"
 
