@@ -532,7 +532,7 @@ impl History {
         };
 
         self.connection.execute(
-            "CREATE TEMP TABLE contextual_commands AS SELECT
+            "CREATE TABLE contextual_commands AS SELECT
                   id, cmd, cmd_tpl, session_id, when_run, MAX(when_run) AS last_run, exit_code, selected, dir,
 
                   /* to be filled in later */
@@ -606,7 +606,7 @@ impl History {
             .unwrap_or_else(|err| panic!("McFly error: Ranking of temp table to work ({})", err));
 
         self.connection
-            .execute("CREATE INDEX temp.MyIndex ON contextual_commands(id);", [])
+            .execute("CREATE INDEX MyIndex ON contextual_commands(id);", [])
             .unwrap_or_else(|err| {
                 panic!(
                     "McFly error: Creation of index on temp table to work ({})",

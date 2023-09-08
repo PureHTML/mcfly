@@ -1,0 +1,136 @@
+#!/bin/bash
+#DBG=1
+QUERY="sqlite3 local.db 'SELECT DISTINCT rank, cmd FROM contextual_commands WHERE cmd like \"%$1%$2%$3\" ORDER BY rank DESC LIMIT ${RESULTS}'"
+SOBIGDIFFERENCE=5
+MINRESULTS=10
+
+FMAX=40
+FSTEP=3
+RESULTS=300
+DCITPATH='/usr/local/bin/'
+F=9 #initial fuzzy
+lematize(){
+O=''
+for i in "${@}"
+do
+if [[ `echo $i|majka  -f  /usr/local/bin/majka.w-lt |sed 's/:.*//g'|uniq|wc -l` == 1 ]];then
+  O="$O `echo -n $i|majka  -f  /usr/local/bin/majka.w-lt |sed -n 1p|sed 's/:.*//g'`"
+else
+  O="$O $i "
+fi
+done
+echo $O
+}
+
+NATURAL_ORDER=`lematize $@|sed 's/ /%/g'`
+array=($@)
+for (( i=${#array[@]}-1; i>=0; i-- ))
+  do rev[${#rev[@]}]=${array[i]}
+  done
+REVERSE_ORDER=`lematize  "${rev[@]}"|sed 's/ /%/g'`
+
+[ $DBG ] && echo NATURAL_ORDER $NATURAL_ORDER
+[ $DBG ] && echo REVERSE_ORDER $REVERSE_ORDER
+
+
+if [ ! -e local.db ];then 
+  screen -dmS mcflySearchTmp mcf2db search
+  for i in {1..50}
+  do
+    RES=`sqlite3 ~/.local/share/mcfly/history.db "SELECT COUNT(id) FROM contextual_commands" 2> /dev/null`
+#echo RES:$RES
+    if [[ $RES > 100 ]];then
+      screen -S mcflySearchTmp -X quit
+      cp ~/.local/share/mcfly/history.db local.db
+  sqlite3 ~/.local/share/mcfly/history.db "DROP TABLE contextual_commands"
+    break
+    else
+    [ $DBG ] && echo nothing!
+      sleep .1
+    fi
+  done
+fi
+C12=`sqlite3 local.db "SELECT COUNT(id) FROM contextual_commands WHERE cmd like \"$NATURAL_ORDER%\""`
+C21=`sqlite3 local.db "SELECT COUNT(id) FROM contextual_commands WHERE cmd like \"$REVERSE_ORDER%\""`
+[ $DBG ] && echo C12: $C12
+[ $DBG ] && echo C21: $C21
+
+
+##C12POS=`sqlite3 local.db "SELECT SUM(rank) FROM contextual_commands WHERE cmd like \"%$NATURAL_ORDER%\" AND rank > 0.0"`
+##[[ ! $C12POS ]] && C12POS=0
+##C12NEG=`sqlite3 local.db "SELECT SUM(rank) FROM contextual_commands WHERE cmd like \"%$NATURAL_ORDER%\" AND rank < 0.0"|sed 's/-//g'`
+##[[ ! $C12NEG ]] && C12NEG=0
+##[ $DBG ] && echo C12POS $C12POS
+##[ $DBG ] && echo C12NEG $C12NEG
+##C12=`echo "$C12POS+$C12NEG"|bc`
+##C21POS=`sqlite3 local.db "SELECT SUM(rank) FROM contextual_commands WHERE cmd like \"%$REVERSE_ORDER%\" AND rank > 0.0"`
+##[[ ! $C21POS ]] && C21POS=0
+##C21NEG=`sqlite3 local.db "SELECT SUM(rank) FROM contextual_commands WHERE cmd like \"%$REVERSE_ORDER%\" AND rank < 0.0"|sed 's/-//g'`
+##[[ ! $C21NEG ]] && C21NEG=0
+##[ $DBG ] && echo C21POS $C21POS 
+##[ $DBG ] && echo C21NEG $C21NEG
+##C21=`echo "$C21POS+$C21NEG"|bc`
+#exit
+#if [[ (( $C12 / $C21 )) > $SOBIGDIFFERENCE ]];then
+#  !!!!!!!!!
+#fi
+#if [[ $C12 -gt 0 && $C12 < $MINRESULTS ]];then
+#echo  C12: $C12
+#else
+#echo  'else C12: ' $C12
+#  Q=C12
+#fi
+if [[ $C12 -lt 0 ]];then
+  Q=0
+fi
+
+if [[ $C12 -eq $C21 || $C12 -gt $C21 ]];then
+  Q=C12
+else
+  Q=C21
+fi
+[ $DBG ] && echo Q: $Q
+if [[ "$Q" == "C12" ]]; then
+  [ $DBG ] && echo searching with C12
+[ $DBG ] &&   sqlite3 local.db "SELECT DISTINCT rank, cmd FROM contextual_commands WHERE cmd like \"%$NATURAL_ORDER%\" ORDER BY rank DESC LIMIT ${RESULTS}"
+  sqlite3 local.db "SELECT DISTINCT rank, cmd FROM contextual_commands WHERE cmd like \"%$NATURAL_ORDER%\" ORDER BY rank DESC LIMIT ${RESULTS}"
+fi
+if [[ "$Q" == "C21" ]];then
+  [ $DBG ] && echo searching with C21
+[ $DBG ] &&   sqlite3 local.db "SELECT DISTINCT rank, cmd FROM contextual_commands WHERE cmd like \"%$REVERSE_ORDER%\" ORDER BY rank DESC LIMIT ${RESULTS}"
+  sqlite3 local.db "SELECT DISTINCT rank, cmd FROM contextual_commands WHERE cmd like \"%$REVERSE_ORDER%\" ORDER BY rank DESC LIMIT ${RESULTS}"
+fi
+exit
+
+
+
+#a tady zacina problem: uriznout ktery pismenko? fuzzy jinak?
+if [[ $Q == 0 ]];then
+  [ $DBG ] && echo 'No results !!! [fuzzy:1]'
+  w1=${w1%?}
+  if [[ `sqlite3 local.db "SELECT DISTINCT rank, cmd FROM contextual_commands WHERE cmd like \"%$w1%$w2%\""` > 0 ]];then
+    Q=1
+    sqlite3 local.db "SELECT DISTINCT rank, cmd FROM contextual_commands WHERE cmd like \"%$w1%$w2%\" ORDER BY rank DESC LIMIT ${RESULTS}"
+  fi
+fi
+
+if [[ $Q == 0 ]];then
+  [ $DBG ] && echo 'No results [fuzzy:1 + C21 SORT ORDER: 2,1]'
+#  w1=$1
+  w2=${w2%?}
+  if [[ `sqlite3 local.db "SELECT DISTINCT rank, cmd FROM contextual_commands WHERE cmd like \"%$w2%$w1%\""` > 0 ]];then
+    Q=1
+    sqlite3 local.db "SELECT DISTINCT rank, cmd FROM contextual_commands WHERE cmd like \"%$w2%$w1%\" ORDER BY rank DESC LIMIT ${RESULTS}"
+  fi
+fi
+
+if [[ $Q == 0 ]];then
+  [ $DBG ] && echo 'No results !!! [fuzzy:2]'
+  w1=${w1%?}
+  if [[ `sqlite3 local.db "SELECT DISTINCT rank, cmd FROM contextual_commands WHERE cmd like \"%$w1%$w2%\""` > 0 ]];then
+    Q=1
+    sqlite3 local.db "SELECT DISTINCT rank, cmd FROM contextual_commands WHERE cmd like \"%$w1%$w2%\" ORDER BY rank DESC LIMIT ${RESULTS}"
+  fi
+fi
+
+
